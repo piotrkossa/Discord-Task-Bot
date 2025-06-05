@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Discord;
+using Discord.WebSocket;
 
 namespace DiscordTaskBot.Misc
 {
@@ -53,6 +54,7 @@ namespace DiscordTaskBot.Misc
         {
             if (!File.Exists(FilePath))
             {
+                Tasks = [];
                 return;
             }
 
@@ -74,12 +76,24 @@ namespace DiscordTaskBot.Misc
         {
             Tasks.Add(taskID, task);
             SaveTasks();
-            LoadTasks();
         }
 
-        public static void DeleteNonExistentTasks()
+        public static void RemoveTask(string taskID)
         {
-            
+            if (Tasks.Remove(taskID)) SaveTasks();
+        }
+
+
+        public static async Task<IUserMessage?> GetUserMessageById(string taskID)
+        {
+            if (!Tasks.ContainsKey(taskID))
+                return null;
+
+            var channel = await Bot._client.GetChannelAsync(Tasks[taskID].ChannelID) as ISocketMessageChannel;
+            if (channel == null)
+                return null;
+
+            return await channel.GetMessageAsync(Tasks[taskID].MessageID) as IUserMessage;
         }
     }
 }

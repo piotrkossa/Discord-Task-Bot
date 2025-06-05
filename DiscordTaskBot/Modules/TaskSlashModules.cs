@@ -4,7 +4,7 @@ using DiscordTaskBot.Misc;
 
 namespace DiscordTaskBot.Modules
 {
-    public class TaskCreationModule : InteractionModuleBase<SocketInteractionContext>
+    public class TaskSlashModules : InteractionModuleBase<SocketInteractionContext>
     {
         [SlashCommand("createtask", "Creates new task")]
         public async Task CreateTask(

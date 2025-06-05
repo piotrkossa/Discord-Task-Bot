@@ -15,13 +15,15 @@ namespace DiscordTaskBot
 
         private readonly InteractionService _interactionService;
 
-        public Bot() {
+        public Bot()
+        {
             _interactionService = new InteractionService(_client.Rest);
 
             // Client Actions
             _client.Ready += OnReady;
             _client.Log += LogAsync;
             _client.InteractionCreated += OnInteraction;
+            _client.ButtonExecuted += TaskStatusHandler.ButtonHandler;
         }
 
         public async Task RunAsync() {
