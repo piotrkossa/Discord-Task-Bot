@@ -17,23 +17,25 @@ public static class TaskStatusHandler
         var taskID = parts[1];
 
         var message = TaskManager.GetUserMessageById(taskID);
-        if (message == null)
+        if (message == null || !TaskManager.Tasks.ContainsKey(taskID))
         {
             await component.RespondAsync("Task not found.", ephemeral: true);
             return;
         }
 
+        var taskData = TaskManager.Tasks[taskID];
+
         switch (action)
         {
             case "state":
-                if (TaskManager.Tasks[taskID].State != TaskStates.ARCHIVE)
+                if (taskData.State != TaskStates.ARCHIVE)
                 {
-                    TaskManager.Tasks[taskID].State += 1;
-                    await MessageLogic.UpdateTaskMessageStatus(TaskManager.Tasks[taskID], taskID, component);
+                    TaskManager.UpperTaskState(taskID);
+                    await MessageLogic.UpdateTaskMessageStatus(taskData, taskID, component);
                 }
                 else
                 {
-                    await MessageLogic.MoveTaskMessageToArchive(TaskManager.Tasks[taskID], taskID, component);
+                    await MessageLogic.MoveTaskMessageToArchive(taskData, taskID, component);
                 }
                 break;
             case "delete":

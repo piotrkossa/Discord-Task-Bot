@@ -95,5 +95,14 @@ namespace DiscordTaskBot.Misc
 
             return await channel.GetMessageAsync(Tasks[taskID].MessageID) as IUserMessage;
         }
+
+        public static void UpperTaskState(string taskID)
+        {
+            if (!Tasks.ContainsKey(taskID))
+                return;
+
+            Tasks[taskID].State += 1;
+            SaveTasks();
+        }
     }
 }
