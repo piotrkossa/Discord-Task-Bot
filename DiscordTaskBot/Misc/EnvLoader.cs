@@ -1,7 +1,7 @@
-namespace DiscordTaskBot.EnvLoader
+namespace DiscordTaskBot.Misc
 {
     //Class Responsible for Loading Enviromental Variables from .env File
-    public static class Env
+    public static class EnvLoader
     {
         public static void LoadEnv(string envPath) {
             if (!File.Exists(envPath)) {
