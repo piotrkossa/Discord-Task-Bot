@@ -7,15 +7,15 @@ namespace DiscordTaskBot
 {
     public class Bot
     {
-        private readonly DiscordSocketClient _client;
+        public static readonly DiscordSocketClient _client = new(
+            new DiscordSocketConfig
+            {
+                GatewayIntents = GatewayIntents.AllUnprivileged
+            });
 
         private readonly InteractionService _interactionService;
 
         public Bot() {
-            _client = new(new DiscordSocketConfig {
-                GatewayIntents = GatewayIntents.AllUnprivileged
-            });
-
             _interactionService = new InteractionService(_client.Rest);
 
             // Client Actions

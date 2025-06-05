@@ -22,22 +22,24 @@ namespace DiscordTaskBot.Misc
 
         public TaskStates State { get; set; }
 
-        //public ulong ChannelID { get; set; } = message.Channel.Id;
-        //public ulong MessageID { get; set; } = message.Id;
+        public ulong ChannelID { get; set; }
+        public ulong MessageID { get; set; }
 
-        public static TaskData FromDiscord(string description, IUser user, int daysToDeadline)
+        public static TaskData FromDiscord(string description, IUser user, int daysToDeadline, ulong channelID)
         {
-            return new TaskData(description, user.Id, DateTime.Today, DateTime.Today.AddDays(daysToDeadline), TaskStates.NOT_STARTED);
+            return new TaskData(description, user.Id, DateTime.Today, DateTime.Today.AddDays(daysToDeadline), TaskStates.NOT_STARTED, channelID);
         }
 
         [JsonConstructor]
-        public TaskData(string description, ulong userID, DateTime creationDate, DateTime completionDate, TaskStates state)
+        public TaskData(string description, ulong userID, DateTime creationDate, DateTime completionDate, TaskStates state, ulong channelID, ulong messageID = 0)
         {
             Description = description;
             UserID = userID;
             CreationDate = creationDate;
             CompletionDate = completionDate;
             State = state;
+            ChannelID = channelID;
+            MessageID = messageID;
         }
     }
 
@@ -45,7 +47,7 @@ namespace DiscordTaskBot.Misc
     {
         private const string FilePath = "tasks.json";
 
-        public static List<TaskData> Tasks { get; private set; } = [];
+        public static Dictionary<string, TaskData> Tasks { get; private set; } = [];
 
         public static void LoadTasks()
         {
@@ -55,7 +57,7 @@ namespace DiscordTaskBot.Misc
             }
 
             string json = File.ReadAllText(FilePath);
-            Tasks = JsonSerializer.Deserialize<List<TaskData>>(json) ?? [];
+            Tasks = JsonSerializer.Deserialize<Dictionary<string, TaskData>>(json) ?? [];
         }
 
         public static void SaveTasks()
@@ -68,11 +70,16 @@ namespace DiscordTaskBot.Misc
             File.WriteAllText(FilePath, json);
         }
 
-        public static void AddTask(TaskData task)
+        public static void AddTask(string taskID, TaskData task)
         {
-            Tasks.Add(task);
+            Tasks.Add(taskID, task);
             SaveTasks();
             LoadTasks();
+        }
+
+        public static void DeleteNonExistentTasks()
+        {
+            
         }
     }
 }

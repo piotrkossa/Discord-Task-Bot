@@ -12,7 +12,17 @@ namespace DiscordTaskBot.Modules
             [Summary("user", "User to whom the task will be assigned")] IUser user,
             [Summary("daysToDeadline", "Days allocated to complete the task")] int daysToDeadline)
         {
-            TaskManager.AddTask(TaskData.FromDiscord(description, user, daysToDeadline));
+            await DeferAsync();
+
+            var taskID = Guid.NewGuid().ToString();
+
+            var taskData = TaskData.FromDiscord(description, user, daysToDeadline, Context.Channel.Id);
+
+            var message = await MessageLogic.SendTaskMessageAsync(taskID, taskData, Context);
+
+            taskData.MessageID = message.Id;
+
+            TaskManager.AddTask(taskID, taskData);
         }
     }
 }
