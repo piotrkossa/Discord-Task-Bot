@@ -67,6 +67,12 @@ namespace DiscordTaskBot
                 Console.Error.Write("Guild Not Specified or Incorrect!");
                 return false;
             }
+            if (Environment.GetEnvironmentVariable("ARCHIVE_CHANNEL") == null || !ulong.TryParse(Environment.GetEnvironmentVariable("GUILD"), out ulong _))
+            {
+                Console.Error.Write("Archive Channel ID Not Specified or Incorrect!");
+                return false;
+            }
+
             return true;
         }
     }

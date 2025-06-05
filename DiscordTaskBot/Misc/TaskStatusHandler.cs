@@ -28,13 +28,14 @@ public static class TaskStatusHandler
         switch (action)
         {
             case "state":
-                if (taskData.State != TaskStates.ARCHIVE)
+                if (taskData.State < TaskStates.COMPLETE)
                 {
                     TaskManager.UpperTaskState(taskID);
                     await MessageLogic.UpdateTaskMessageStatus(taskData, taskID, component);
                 }
-                else
+                else if (taskData.State == TaskStates.COMPLETE)
                 {
+                    TaskManager.UpperTaskState(taskID);
                     await MessageLogic.MoveTaskMessageToArchive(taskData, taskID, component);
                 }
                 break;

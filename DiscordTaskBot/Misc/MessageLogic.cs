@@ -31,11 +31,22 @@ namespace DiscordTaskBot.Misc
         {
             var (embed, component) = BuildMessage(taskData, taskID);
 
-            await messageComponent.UpdateAsync(msg =>
-            {
-                msg.Embed = embed;
-                msg.Components = component;
-            });
+            var oldMessage = await messageComponent.Channel.GetMessageAsync(taskData.MessageID) as IUserMessage;
+
+            var archiveChannelID = ulong.Parse(Environment.GetEnvironmentVariable("ARCHIVE_CHANNEL")!);
+
+            if (oldMessage != null)
+                await oldMessage.DeleteAsync();
+
+            var archiveChannel = Bot._client.GetChannel(archiveChannelID) as IMessageChannel;
+            if (archiveChannel == null)
+                throw new InvalidOperationException("Archive channel not found");
+
+            var newMessage = await archiveChannel.SendMessageAsync(embed: embed, components: component);
+
+            TaskManager.Tasks[taskID].ChannelID = archiveChannelID;
+            TaskManager.Tasks[taskID].ChannelID = newMessage.Id;
+            TaskManager.SaveTasks();
         }
 
         private static (Embed, MessageComponent?) BuildMessage(TaskData taskData, string taskID)
