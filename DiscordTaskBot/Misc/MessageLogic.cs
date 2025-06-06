@@ -53,24 +53,47 @@ namespace DiscordTaskBot.Misc
         {
             string stateName = "";
             string buttonName = "";
+            string titleEmoji = "";
             Color embedColor = Color.Default;
+            ButtonStyle buttonStyle = ButtonStyle.Secondary;
+
+            var remainingTime = taskData.CompletionDate - DateTime.UtcNow;
+
+            var isLate = false;
+
+            if (remainingTime.TotalHours < 0)
+            {
+                titleEmoji = "💀 ";
+                embedColor = new Color(0, 0, 0);
+                isLate = true;
+            }
+            else if (remainingTime.TotalHours <= 24)
+            {
+                titleEmoji = "❗ ";
+                embedColor = new Color(204, 0, 0);
+                isLate = true;
+            }
 
             switch (taskData.State)
             {
                 case TaskStates.NOT_STARTED:
                     stateName = "⏳ Not Started";
-                    buttonName = "▶️ Start";
-                    embedColor = Color.LightGrey;
+                    buttonName = "▶️  Start";
+                    if (!isLate)
+                        embedColor = Color.LightGrey;
                     break;
                 case TaskStates.IN_PROGRESS:
                     stateName = "🔨 In Progress";
-                    buttonName = "🏁 Complete";
-                    embedColor = Color.Orange;
+                    buttonName = "🏁  Complete";
+                    buttonStyle = ButtonStyle.Primary;
+                    if (!isLate)
+                        embedColor = Color.Orange;
                     break;
                 case TaskStates.COMPLETE:
                     stateName = "✅ Completed";
-                    buttonName = "📥 Archive";
+                    buttonName = "📥  Archive";
                     embedColor = Color.Green;
+                    buttonStyle = ButtonStyle.Success;
                     break;
                 case TaskStates.ARCHIVE:
                     stateName = "📦 Archived";
@@ -79,10 +102,10 @@ namespace DiscordTaskBot.Misc
             }
 
             var embed = new EmbedBuilder()
-                .WithTitle("Task")
+                .WithTitle(titleEmoji + "Task")
                 .WithDescription($"{taskData.Description}")
                 .AddField("Assigned To", $"<@{taskData.UserID}>", inline: true)  // mention the user
-                //.AddField("Deadline", taskData.CompletionDate.ToString("MM/dd/yyyy"), inline: true)  // nicer date format
+                                                                                 //.AddField("Deadline", taskData.CompletionDate.ToString("MM/dd/yyyy"), inline: true)  // nicer date format
                 .AddField("Deadline", GetDiscordTimestamp(taskData.CompletionDate), inline: true)  // discord timestamp
                 .AddField("Status", stateName, inline: true)
                 .WithColor(embedColor)
@@ -96,7 +119,7 @@ namespace DiscordTaskBot.Misc
             }
 
             var component = new ComponentBuilder()
-                .WithButton(buttonName, customId: $"state_{taskID}", ButtonStyle.Primary)
+                .WithButton(buttonName, customId: $"state_{taskID}", buttonStyle)
                 .WithButton("Cancel", customId: $"delete_{taskID}", ButtonStyle.Danger)
                 .Build();
 
