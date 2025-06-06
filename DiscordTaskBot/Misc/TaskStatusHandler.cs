@@ -7,9 +7,11 @@ public static class TaskStatusHandler
     {
         var parts = component.Data.CustomId.Split('_');
 
+        await component.DeferAsync(true);
+
         if (parts.Length != 2)
         {
-            await component.RespondAsync("Invalid button format.", ephemeral: true);
+            await component.FollowupAsync("Invalid button format.", ephemeral: true);
             return;
         }
 
@@ -19,7 +21,7 @@ public static class TaskStatusHandler
         var message = TaskManager.GetUserMessageById(taskID);
         if (message == null || !TaskManager.Tasks.ContainsKey(taskID))
         {
-            await component.RespondAsync("Task not found.", ephemeral: true);
+            await component.FollowupAsync("Task not found.", ephemeral: true);
             return;
         }
 
@@ -30,7 +32,7 @@ public static class TaskStatusHandler
 
         if (user == null)
         {
-            await component.RespondAsync("Could not indentify user.", ephemeral: true);
+            await component.FollowupAsync("Could not indentify user.", ephemeral: true);
             return;
         }
 
@@ -41,32 +43,34 @@ public static class TaskStatusHandler
                 {
                     if (user.Id != taskData.UserID && !user.GuildPermissions.Administrator)
                     {
-                        await component.RespondAsync("It is not your task!", ephemeral: true);
+                        await component.FollowupAsync("It is not your task!", ephemeral: true);
                         return;
                     }
                     TaskManager.UpperTaskState(taskID);
                     await MessageLogic.UpdateTaskMessageStatus(taskData, taskID, component.Message);
+                    await component.FollowupAsync("Task status updated!", ephemeral: true);
                 }
                 else if (taskData.State == TaskStates.COMPLETE)
                 {
                     if (!user.GuildPermissions.Administrator)
                     {
-                        await component.RespondAsync("You do not have permissions!", ephemeral: true);
+                        await component.FollowupAsync("You do not have permissions!", ephemeral: true);
                         return;
                     }
                     TaskManager.UpperTaskState(taskID);
                     await MessageLogic.MoveTaskMessageToArchive(taskData, taskID, component);
+                    await component.FollowupAsync("Task moved to archive,", ephemeral: true);
                 }
                 break;
             case "delete":
                 if (!user.GuildPermissions.Administrator)
                 {
-                    await component.RespondAsync("You do not have permissions!", ephemeral: true);
+                    await component.FollowupAsync("You do not have permissions!", ephemeral: true);
                     return;
                 }
                 TaskManager.RemoveTask(taskID);
                 await component.Message.DeleteAsync();
-                await component.RespondAsync("Task deleted.", ephemeral: true);
+                await component.FollowupAsync("Task deleted.", ephemeral: true);
                 return;
         }
     }
