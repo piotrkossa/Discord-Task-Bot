@@ -53,23 +53,28 @@ namespace DiscordTaskBot.Misc
         {
             string stateName = "";
             string buttonName = "";
+            Color embedColor = Color.Default;
 
             switch (taskData.State)
             {
                 case TaskStates.NOT_STARTED:
-                    stateName = "Not Started";
-                    buttonName = "Start";
+                    stateName = "⏳ Not Started";
+                    buttonName = "▶️ Start";
+                    embedColor = Color.LightGrey;
                     break;
                 case TaskStates.IN_PROGRESS:
-                    stateName = "In Progress";
-                    buttonName = "Complete";
+                    stateName = "🔨 In Progress";
+                    buttonName = "🏁 Complete";
+                    embedColor = Color.Orange;
                     break;
                 case TaskStates.COMPLETE:
-                    stateName = "Completed";
-                    buttonName = "Archive";
+                    stateName = "✅ Completed";
+                    buttonName = "📥 Archive";
+                    embedColor = Color.Green;
                     break;
                 case TaskStates.ARCHIVE:
-                    stateName = "Archived";
+                    stateName = "📦 Archived";
+                    embedColor = Color.Purple;
                     break;
             }
 
@@ -77,9 +82,10 @@ namespace DiscordTaskBot.Misc
                 .WithTitle("Task")
                 .WithDescription($"{taskData.Description}")
                 .AddField("Assigned To", $"<@{taskData.UserID}>", inline: true)  // mention the user
-                .AddField("Deadline", taskData.CompletionDate.ToString("MM/dd/yyyy"), inline: true)  // nicer date format
+                //.AddField("Deadline", taskData.CompletionDate.ToString("MM/dd/yyyy"), inline: true)  // nicer date format
+                .AddField("Deadline", GetDiscordTimestamp(taskData.CompletionDate), inline: true)  // discord timestamp
                 .AddField("Status", stateName, inline: true)
-                .WithColor(Color.Orange)
+                .WithColor(embedColor)
                 .WithFooter(footer => footer.Text = $"Created on: {taskData.CreationDate:dd/MM/yyyy}")
                 .Build();
 
@@ -95,6 +101,13 @@ namespace DiscordTaskBot.Misc
                 .Build();
 
             return (embed, component);
+        }
+
+        public static string GetDiscordTimestamp(DateTime dateTime, char format = 'R')
+        {
+            // Upewnij się, że czas jest w UTC
+            long unixTime = ((DateTimeOffset)dateTime.ToUniversalTime()).ToUnixTimeSeconds();
+            return $"<t:{unixTime}:{format}>";
         }
     }
 }

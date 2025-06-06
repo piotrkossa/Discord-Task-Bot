@@ -2,6 +2,7 @@ using Discord;
 using Discord.WebSocket;
 using Discord.Interactions;
 using System.Reflection;
+using DiscordTaskBot.Misc;
 
 namespace DiscordTaskBot
 {
@@ -38,14 +39,19 @@ namespace DiscordTaskBot
             await Task.Delay(-1);
         }
 
-        private async Task OnReady() {
+        private async Task OnReady()
+        {
             Console.WriteLine("Bot connected.");
 
             await _interactionService.AddModulesAsync(Assembly.GetExecutingAssembly(), null);
 
             await _interactionService.RegisterCommandsToGuildAsync(ulong.Parse(Environment.GetEnvironmentVariable("GUILD")!), true);
-            
+
             Console.WriteLine("Slash commands registered.");
+
+            TaskManager.LoadTasks();
+            await TaskManager.DeleteInactiveTasks();
+            Console.WriteLine("Tasks loaded.");
         }
 
         private async Task OnInteraction(SocketInteraction interaction) {

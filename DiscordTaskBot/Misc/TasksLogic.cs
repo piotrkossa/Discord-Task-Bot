@@ -28,7 +28,7 @@ namespace DiscordTaskBot.Misc
 
         public static TaskData FromDiscord(string description, IUser user, int daysToDeadline, ulong channelID)
         {
-            return new TaskData(description, user.Id, DateTime.Today, DateTime.Today.AddDays(daysToDeadline), TaskStates.NOT_STARTED, channelID);
+            return new TaskData(description, user.Id, DateTime.Today, DateTime.Today.AddDays(daysToDeadline+1).AddSeconds(-1), TaskStates.NOT_STARTED, channelID);
         }
 
         [JsonConstructor]
@@ -101,7 +101,24 @@ namespace DiscordTaskBot.Misc
             if (!Tasks.ContainsKey(taskID))
                 return;
 
-            Tasks[taskID].State += 1;
+            if (Tasks[taskID].State < Enum.GetValues<TaskStates>().Max())
+            {
+                Tasks[taskID].State += 1;
+                SaveTasks();
+            }
+        }
+
+        public static async Task DeleteInactiveTasks()
+        {
+            var keys = Tasks.Keys;
+            foreach (var taskID in keys)
+            {
+                if (await GetUserMessageById(taskID) == null)
+                {
+                    Tasks.Remove(taskID);
+                }
+            }
+
             SaveTasks();
         }
     }

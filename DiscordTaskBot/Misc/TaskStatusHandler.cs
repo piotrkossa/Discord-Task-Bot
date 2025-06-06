@@ -23,23 +23,47 @@ public static class TaskStatusHandler
             return;
         }
 
+
         var taskData = TaskManager.Tasks[taskID];
+
+        var user = component.User as SocketGuildUser;
+
+        if (user == null)
+        {
+            await component.RespondAsync("Could not indentify user.", ephemeral: true);
+            return;
+        }
 
         switch (action)
         {
             case "state":
                 if (taskData.State < TaskStates.COMPLETE)
                 {
+                    if (user.Id != taskData.UserID && !user.GuildPermissions.Administrator)
+                    {
+                        await component.RespondAsync("It is not your task!", ephemeral: true);
+                        return;
+                    }
                     TaskManager.UpperTaskState(taskID);
                     await MessageLogic.UpdateTaskMessageStatus(taskData, taskID, component);
                 }
                 else if (taskData.State == TaskStates.COMPLETE)
                 {
+                    if (!user.GuildPermissions.Administrator)
+                    {
+                        await component.RespondAsync("You do not have permissions!", ephemeral: true);
+                        return;
+                    }
                     TaskManager.UpperTaskState(taskID);
                     await MessageLogic.MoveTaskMessageToArchive(taskData, taskID, component);
                 }
                 break;
             case "delete":
+                if (!user.GuildPermissions.Administrator)
+                {
+                    await component.RespondAsync("You do not have permissions!", ephemeral: true);
+                    return;
+                }
                 TaskManager.RemoveTask(taskID);
                 await component.Message.DeleteAsync();
                 await component.RespondAsync("Task deleted.", ephemeral: true);
