@@ -27,9 +27,11 @@ namespace DiscordTaskBot
             _client.ButtonExecuted += TaskStatusHandler.ButtonHandler;
         }
 
-        public async Task RunAsync() {
+        public async Task RunAsync()
+        {
             // Checking if Discord Bot Token is Specified
-            if (!CheckEnviromentalVariables()) {
+            if (!CheckEnviromentalVariables())
+            {
                 return;
             }
 
@@ -52,24 +54,32 @@ namespace DiscordTaskBot
             TaskManager.LoadTasks();
             await TaskManager.DeleteInactiveTasks();
             Console.WriteLine("Tasks loaded.");
+
+            var _ = ScheduleDailyUpdateAsync();
+            Console.WriteLine("Updating every 24h enabled.");
         }
 
-        private async Task OnInteraction(SocketInteraction interaction) {
+        private async Task OnInteraction(SocketInteraction interaction)
+        {
             var context = new SocketInteractionContext(_client, interaction);
             await _interactionService.ExecuteCommandAsync(context, null);
         }
 
-        private Task LogAsync(LogMessage log) {
+        private Task LogAsync(LogMessage log)
+        {
             Console.WriteLine($"[LOG] {log}");
             return Task.CompletedTask;
         }
 
-        private bool CheckEnviromentalVariables() {
-            if (Environment.GetEnvironmentVariable("TOKEN") == null) {
+        private bool CheckEnviromentalVariables()
+        {
+            if (Environment.GetEnvironmentVariable("TOKEN") == null)
+            {
                 Console.Error.Write("Token Not Specified!");
                 return false;
             }
-            if (Environment.GetEnvironmentVariable("GUILD") == null || !ulong.TryParse(Environment.GetEnvironmentVariable("GUILD"), out ulong _)) {
+            if (Environment.GetEnvironmentVariable("GUILD") == null || !ulong.TryParse(Environment.GetEnvironmentVariable("GUILD"), out ulong _))
+            {
                 Console.Error.Write("Guild Not Specified or Incorrect!");
                 return false;
             }
@@ -80,6 +90,22 @@ namespace DiscordTaskBot
             }
 
             return true;
+        }
+
+        private static async Task ScheduleDailyUpdateAsync()
+        {
+            while (true)
+            {
+                DateTime now = DateTime.Now;
+                DateTime nextRun = now.Date.AddDays(1).AddMinutes(1);
+
+                TimeSpan delay = nextRun - now;
+
+                await Task.Delay(delay);
+
+                TaskManager.UpdateArchivisedTasks();
+                await MessageLogic.DailyTaskUpdate();
+            }
         }
     }
 }

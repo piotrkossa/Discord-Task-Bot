@@ -16,11 +16,11 @@ namespace DiscordTaskBot.Misc
             return await context.Interaction.GetOriginalResponseAsync();
         }
 
-        public static async Task UpdateTaskMessageStatus(TaskData taskData, string taskID, SocketMessageComponent messageComponent)
+        public static async Task UpdateTaskMessageStatus(TaskData taskData, string taskID, IUserMessage message)
         {
             var (embed, component) = BuildMessage(taskData, taskID);
 
-            await messageComponent.UpdateAsync(msg =>
+            await message.ModifyAsync(msg =>
             {
                 msg.Embed = embed;
                 msg.Components = component;
@@ -131,6 +131,27 @@ namespace DiscordTaskBot.Misc
             // Upewnij się, że czas jest w UTC
             long unixTime = ((DateTimeOffset)dateTime.ToUniversalTime()).ToUnixTimeSeconds();
             return $"<t:{unixTime}:{format}>";
+        }
+
+        public static async Task DailyTaskUpdate()
+        {
+            List<string> keysToDelete = [];
+            foreach (var (taskID, taskData) in TaskManager.Tasks)
+            {
+                if (TaskManager.GetUserMessageById(taskID) is not IUserMessage message)
+                {
+                    keysToDelete.Add(taskID);
+                    continue;
+                }
+
+                await UpdateTaskMessageStatus(taskData, taskID, message);
+            }
+            
+            foreach (var key in keysToDelete)
+            {
+                TaskManager.Tasks.Remove(key);
+            }
+            TaskManager.SaveTasks();
         }
     }
 }

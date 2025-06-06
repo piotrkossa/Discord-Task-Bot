@@ -45,7 +45,7 @@ public static class TaskStatusHandler
                         return;
                     }
                     TaskManager.UpperTaskState(taskID);
-                    await MessageLogic.UpdateTaskMessageStatus(taskData, taskID, component);
+                    await MessageLogic.UpdateTaskMessageStatus(taskData, taskID, component.Message);
                 }
                 else if (taskData.State == TaskStates.COMPLETE)
                 {

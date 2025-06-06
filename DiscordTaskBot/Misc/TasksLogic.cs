@@ -47,6 +47,7 @@ namespace DiscordTaskBot.Misc
     public static class TaskManager
     {
         private const string FilePath = "tasks.json";
+        private const string ArchiveFilePath = "tasksarchive.json";
 
         public static Dictionary<string, TaskData> Tasks { get; private set; } = [];
 
@@ -120,6 +121,42 @@ namespace DiscordTaskBot.Misc
             }
 
             SaveTasks();
+        }
+
+        public static void UpdateArchivisedTasks()
+        {
+            List<string> keysToDelete = [];
+
+            Dictionary<string, TaskData> ArchiveTasks = [];
+
+            string json;
+
+            if (File.Exists(ArchiveFilePath))
+            {
+                json = File.ReadAllText(ArchiveFilePath);
+                ArchiveTasks = JsonSerializer.Deserialize<Dictionary<string, TaskData>>(json) ?? [];
+            }
+
+            foreach (var (taskID, taskData) in Tasks)
+            {
+                if (taskData.State == TaskStates.ARCHIVE)
+                {
+                    keysToDelete.Add(taskID);
+                    ArchiveTasks.Add(taskID, taskData);
+                }
+            }
+            foreach (var taskID in keysToDelete)
+            {
+                Tasks.Remove(taskID);
+            }
+            SaveTasks();
+
+            json = JsonSerializer.Serialize(ArchiveTasks, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+
+            File.WriteAllText(ArchiveFilePath, json);
         }
     }
 }
