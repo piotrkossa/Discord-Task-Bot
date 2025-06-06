@@ -94,10 +94,12 @@ namespace DiscordTaskBot.Misc
                     buttonName = "📥  Archive";
                     embedColor = Color.Green;
                     buttonStyle = ButtonStyle.Success;
+                    titleEmoji = "";
                     break;
                 case TaskStates.ARCHIVE:
                     stateName = "📦 Archived";
                     embedColor = Color.Purple;
+                    titleEmoji = "";
                     break;
             }
 
