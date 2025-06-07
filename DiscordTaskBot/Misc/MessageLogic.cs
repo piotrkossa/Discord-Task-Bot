@@ -45,7 +45,7 @@ namespace DiscordTaskBot.Misc
             var newMessage = await archiveChannel.SendMessageAsync(embed: embed, components: component);
 
             TaskManager.Tasks[taskID].ChannelID = archiveChannelID;
-            TaskManager.Tasks[taskID].ChannelID = newMessage.Id;
+            TaskManager.Tasks[taskID].MessageID = newMessage.Id;
             TaskManager.SaveTasks();
         }
 
