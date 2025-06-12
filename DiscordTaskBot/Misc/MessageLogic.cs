@@ -6,6 +6,13 @@ namespace DiscordTaskBot.Misc
 {
     public static class MessageLogic
     {
+        /// <summary>
+        /// Sends Discord Message with specified task
+        /// </summary>
+        /// <param name="taskID">ID of the task</param>
+        /// <param name="taskData">TaskData object with task's informations</param>
+        /// <param name="context">Context of interaction</param>
+        /// <returns>Sent message object</returns>
         public static async Task<IUserMessage> SendTaskMessageAsync(string taskID, TaskData taskData, SocketInteractionContext context)
         {
             var (embed, component) = BuildMessage(taskData, taskID);
@@ -16,6 +23,12 @@ namespace DiscordTaskBot.Misc
             return await context.Interaction.GetOriginalResponseAsync();
         }
 
+        /// <summary>
+        /// Updates task's message status
+        /// </summary>
+        /// <param name="taskData">TaskData with task's informations</param>
+        /// <param name="taskID">ID of the task</param>
+        /// <param name="message">Message object</param>
         public static async Task UpdateTaskMessageStatus(TaskData taskData, string taskID, IUserMessage message)
         {
             var (embed, component) = BuildMessage(taskData, taskID);
@@ -27,6 +40,13 @@ namespace DiscordTaskBot.Misc
             });
         }
 
+        /// <summary>
+        /// Moves message to archive channel
+        /// </summary>
+        /// <param name="taskData">TaskData with task's information</param>
+        /// <param name="taskID">ID of the task</param>
+        /// <param name="messageComponent">Component of the message, passed as argument in function handling button click</param>
+        /// <exception cref="InvalidOperationException">Throws when archive channel is not found</exception>
         public static async Task MoveTaskMessageToArchive(TaskData taskData, string taskID, SocketMessageComponent messageComponent)
         {
             var (embed, component) = BuildMessage(taskData, taskID);
@@ -49,6 +69,12 @@ namespace DiscordTaskBot.Misc
             TaskManager.SaveTasks();
         }
 
+        /// <summary>
+        /// Helps build message's body - embed and buttons
+        /// </summary>
+        /// <param name="taskData">TaskData object with task's informations</param>
+        /// <param name="taskID">ID of the task</param>
+        /// <returns></returns>
         private static (Embed, MessageComponent?) BuildMessage(TaskData taskData, string taskID)
         {
             string stateName = "";
@@ -128,6 +154,12 @@ namespace DiscordTaskBot.Misc
             return (embed, component);
         }
 
+        /// <summary>
+        /// Helps creating discord timestamps
+        /// </summary>
+        /// <param name="dateTime">DateTime object with date</param>
+        /// <param name="format">Format of the timestamp, defaultly R"</param>
+        /// <returns>String with ready to use discord timestamp</returns>
         public static string GetDiscordTimestamp(DateTime dateTime, char format = 'R')
         {
             // Upewnij się, że czas jest w UTC
@@ -135,6 +167,9 @@ namespace DiscordTaskBot.Misc
             return $"<t:{unixTime}:{format}>";
         }
 
+        /// <summary>
+        /// Deletes tasks without existing message on discord, in case user deleted task's message 
+        /// </summary>
         public static async Task DailyTaskUpdate()
         {
             List<string> keysToDelete = [];
@@ -148,7 +183,7 @@ namespace DiscordTaskBot.Misc
 
                 await UpdateTaskMessageStatus(taskData, taskID, message);
             }
-            
+
             foreach (var key in keysToDelete)
             {
                 TaskManager.Tasks.Remove(key);
