@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <DocumentationFile>DiscordTaskBot\bin\Debug\net9.0\MyApp.xml</DocumentationFile>
+    <DocumentationFile>..\docs\api\MyApp.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

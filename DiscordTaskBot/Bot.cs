@@ -41,6 +41,8 @@ namespace DiscordTaskBot
             await Task.Delay(-1);
         }
 
+        private Task dailyTaskUpdater;
+
         private async Task OnReady()
         {
             Console.WriteLine("Bot connected.");
@@ -55,7 +57,9 @@ namespace DiscordTaskBot
             await TaskManager.DeleteInactiveTasks();
             Console.WriteLine("Tasks loaded.");
 
-            var _ = ScheduleDailyUpdateAsync();
+            if (dailyTaskUpdater == null)
+                dailyTaskUpdater = ScheduleDailyUpdateAsync();
+
             Console.WriteLine("Updating every 24h enabled.");
         }
 
@@ -105,6 +109,7 @@ namespace DiscordTaskBot
 
                 TaskManager.UpdateArchivisedTasks();
                 await MessageLogic.DailyTaskUpdate();
+                Console.WriteLine("Tasks updated!");
             }
         }
     }
