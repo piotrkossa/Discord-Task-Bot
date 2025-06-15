@@ -49,46 +49,63 @@ namespace DiscordTaskBot.Misc
         private const string FilePath = "tasks.json";
         private const string ArchiveFilePath = "tasksarchive.json";
 
-        public static Dictionary<string, TaskData> Tasks { get; private set; } = [];
+        public static Dictionary<string, TaskData> Tasks { get; private set; } = new();
+
+        private static readonly object _fileLock = new object();
 
         public static void LoadTasks()
         {
-            if (!File.Exists(FilePath))
+            lock (_fileLock)
             {
-                Tasks = [];
-                return;
-            }
+                if (!File.Exists(FilePath))
+                {
+                    Tasks = [];
+                    return;
+                }
 
-            string json = File.ReadAllText(FilePath);
-            Tasks = JsonSerializer.Deserialize<Dictionary<string, TaskData>>(json) ?? [];
+                string json = File.ReadAllText(FilePath);
+                Tasks = JsonSerializer.Deserialize<Dictionary<string, TaskData>>(json) ?? [];
+            }
         }
 
         public static void SaveTasks()
         {
-            string json = JsonSerializer.Serialize(Tasks, new JsonSerializerOptions
+            lock (_fileLock)
             {
-                WriteIndented = true
-            });
+                string json = JsonSerializer.Serialize(Tasks, new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
 
-            File.WriteAllText(FilePath, json);
+                File.WriteAllText(FilePath, json);
+            }
         }
 
         public static void AddTask(string taskID, TaskData task)
         {
-            Tasks.Add(taskID, task);
-            SaveTasks();
+            lock (_fileLock)
+            {
+                Tasks.Add(taskID, task);
+                SaveTasks();
+            }
         }
 
         public static void RemoveTask(string taskID)
         {
-            if (Tasks.Remove(taskID)) SaveTasks();
+            lock (_fileLock)
+            {
+                if (Tasks.Remove(taskID)) SaveTasks();
+            }
         }
 
 
         public static async Task<IUserMessage?> GetUserMessageById(string taskID)
         {
-            if (!Tasks.ContainsKey(taskID))
-                return null;
+            lock (_fileLock)
+            {
+                if (!Tasks.ContainsKey(taskID))
+                    return null;
+            }
 
             var channel = await Bot._client.GetChannelAsync(Tasks[taskID].ChannelID) as ISocketMessageChannel;
             if (channel == null)
@@ -99,24 +116,28 @@ namespace DiscordTaskBot.Misc
 
         public static void UpperTaskState(string taskID)
         {
-            if (!Tasks.ContainsKey(taskID))
-                return;
-
-            if (Tasks[taskID].State < Enum.GetValues<TaskStates>().Max())
+            lock (_fileLock)
             {
-                Tasks[taskID].State += 1;
-                SaveTasks();
+                if (!Tasks.ContainsKey(taskID))
+                    return;
+
+                if (Tasks[taskID].State < Enum.GetValues<TaskStates>().Max())
+                {
+                    Tasks[taskID].State += 1;
+                    SaveTasks();
+                }
             }
         }
 
         public static async Task DeleteInactiveTasks()
         {
-            var keys = Tasks.Keys;
+            var keys = Tasks.Keys.ToList();
             foreach (var taskID in keys)
             {
                 if (await GetUserMessageById(taskID) == null)
                 {
-                    Tasks.Remove(taskID);
+                    lock (_fileLock)
+                        Tasks.Remove(taskID);
                 }
             }
 
@@ -125,38 +146,41 @@ namespace DiscordTaskBot.Misc
 
         public static void UpdateArchivisedTasks()
         {
-            List<string> keysToDelete = [];
-
-            Dictionary<string, TaskData> ArchiveTasks = [];
-
-            string json;
-
-            if (File.Exists(ArchiveFilePath))
+            lock (_fileLock)
             {
-                json = File.ReadAllText(ArchiveFilePath);
-                ArchiveTasks = JsonSerializer.Deserialize<Dictionary<string, TaskData>>(json) ?? [];
-            }
+                List<string> keysToDelete = [];
 
-            foreach (var (taskID, taskData) in Tasks)
-            {
-                if (taskData.State == TaskStates.ARCHIVE)
+                Dictionary<string, TaskData> ArchiveTasks = [];
+
+                string json;
+
+                if (File.Exists(ArchiveFilePath))
                 {
-                    keysToDelete.Add(taskID);
-                    ArchiveTasks.Add(taskID, taskData);
+                    json = File.ReadAllText(ArchiveFilePath);
+                    ArchiveTasks = JsonSerializer.Deserialize<Dictionary<string, TaskData>>(json) ?? [];
                 }
-            }
-            foreach (var taskID in keysToDelete)
-            {
-                Tasks.Remove(taskID);
-            }
-            SaveTasks();
 
-            json = JsonSerializer.Serialize(ArchiveTasks, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
+                foreach (var (taskID, taskData) in Tasks)
+                {
+                    if (taskData.State == TaskStates.ARCHIVE)
+                    {
+                        keysToDelete.Add(taskID);
+                        ArchiveTasks.Add(taskID, taskData);
+                    }
+                }
+                foreach (var taskID in keysToDelete)
+                {
+                    Tasks.Remove(taskID);
+                }
+                SaveTasks();
 
-            File.WriteAllText(ArchiveFilePath, json);
+                json = JsonSerializer.Serialize(ArchiveTasks, new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
+
+                File.WriteAllText(ArchiveFilePath, json);
+            }
         }
     }
 }
